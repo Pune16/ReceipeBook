@@ -23,7 +23,7 @@ def receipes(request):
     
     search_query = request.GET.get('search')
     if search_query:
-        queryset = queryset.filter(receipe_name__icontains= search)
+        queryset = queryset.filter(receipe_name__icontains= search_query)
         
     context = {'receipes': queryset}
     return render(request, 'receipes.html', context)
