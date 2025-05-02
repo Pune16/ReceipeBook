@@ -2,13 +2,13 @@ from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.messages import get_messages
-from veges.views import  login_page
-
 from django.core.files.uploadedfile import SimpleUploadedFile
 from veges.models import Receipe  
+from django.contrib.auth import get_user_model
+from django.test.client import Client
 
 
-
+# testCase script for registration page
 
 class RegistrationTests(TestCase):
 
@@ -23,17 +23,17 @@ class RegistrationTests(TestCase):
             'password': 'password123'
         })
         
-        # Check that the user was created
+       
         self.assertEqual(User.objects.count(), 1)
         user = User.objects.get(username='johndoe')
         self.assertEqual(user.first_name, 'John')
         self.assertEqual(user.last_name, 'Doe')
         self.assertTrue(user.check_password('password123'))
 
-        # Check that the response redirects to the login page
+       
         self.assertRedirects(response, '/login/') 
 
-        # Check for success message
+       
         messages_list = list(get_messages(response.wsgi_request))
         self.assertEqual(str(messages_list[0]), "Account created successfully.")
 
@@ -59,6 +59,7 @@ class RegistrationTests(TestCase):
         self.assertEqual(str(messages_list[0]), "Username already exists.")
 
 
+# Test case script for Login Page
 
 class LoginTests(TestCase):
 
@@ -100,7 +101,7 @@ class LoginTests(TestCase):
         
 
 
-
+# Test case script to  check Receipe creates successfylly.
 
 class ReceipesTests(TestCase):
 
@@ -133,6 +134,8 @@ class ReceipesTests(TestCase):
         self.assertContains(response, "Salad")
 
 
+
+# Test case script for updating the receipe
 
 class UpdateReceipeTests(TestCase):
 
@@ -188,6 +191,8 @@ class UpdateReceipeTests(TestCase):
         self.assertEqual(response.status_code, 404)  
 
 
+
+# test case script for deleting the receipe
 class DeleteReceipeTests(TestCase):
 
     def setUp(self):
@@ -214,7 +219,8 @@ class DeleteReceipeTests(TestCase):
         self.assertEqual(response.status_code, 404)  
         
         
-        
+# Test case for searching the receipe
+     
 class SearchReceipesTests(TestCase):
 
     def setUp(self):
@@ -252,3 +258,14 @@ class SearchReceipesTests(TestCase):
         self.assertContains(response, "Salad")
 
 
+
+# Test case for logout the user or not
+class LogoutViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = get_user_model().objects.create_user(username="testuser", password="testpassword")
+        self.client.login(username="testuser", password="testpassword")
+
+    def test_logout_redirect(self):
+        response = self.client.get(reverse('logout_page'))  
+        self.assertRedirects(response, '/login/', status_code=302, target_status_code=200)
