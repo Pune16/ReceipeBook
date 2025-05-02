@@ -31,7 +31,7 @@ class RegistrationTests(TestCase):
         self.assertTrue(user.check_password('password123'))
 
         # Check that the response redirects to the login page
-        self.assertRedirects(response, '/login/')  # Adjust this if your login URL is different
+        self.assertRedirects(response, '/login/') 
 
         # Check for success message
         messages_list = list(get_messages(response.wsgi_request))
@@ -48,13 +48,13 @@ class RegistrationTests(TestCase):
             'password': 'password456'
         })
 
-        # Check that the user count is still 1
+      
         self.assertEqual(User.objects.count(), 1)
 
-        # Check that the response redirects back to the registration page
-        self.assertRedirects(response, '/register/')  # Adjust this if your register URL is different
+        
+        self.assertRedirects(response, '/register/')  
 
-        # Check for error message)
+       
         messages_list = list(get_messages(response.wsgi_request))
         self.assertEqual(str(messages_list[0]), "Username already exists.")
 
@@ -129,6 +129,125 @@ class ReceipesTests(TestCase):
 
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Pasta")
+        self.assertContains(response, "Salad")
+
+
+
+class UpdateReceipeTests(TestCase):
+
+    def setUp(self):
+        
+        self.receipe = Receipe.objects.create(
+            receipe_name="Pasta",
+            receipe_description="A classic Italian dish",
+            receipe_image=None
+        )
+        self.url = reverse("update_receipe", args=[self.receipe.id])
+
+    def test_update_receipe_success(self):
+        
+        new_image = SimpleUploadedFile(name="new_test.jpg", content=b"", content_type="image/jpeg")
+
+        response = self.client.post(self.url, {
+            "Receipe_Name": "Updated Pasta",
+            "Receipe_Description": "An improved recipe",
+            "Receipe_Image": new_image
+        })
+
+        # Refresh from DB
+        self.receipe.refresh_from_db()
+
+        self.assertEqual(self.receipe.receipe_name, "Updated Pasta")
+        self.assertEqual(self.receipe.receipe_description, "An improved recipe")
+        self.assertRedirects(response, "/receipes/") 
+
+    def test_update_receipe_without_image(self):
+        """Test updating a recipe without changing the image."""
+        response = self.client.post(self.url, {
+            "Receipe_Name": "Veggie Pasta",
+            "Receipe_Description": "A healthier version",
+            "Receipe_Image": ""  
+        })
+
+        # Refresh from DB
+        self.receipe.refresh_from_db()
+
+        self.assertEqual(self.receipe.receipe_name, "Veggie Pasta")
+        self.assertEqual(self.receipe.receipe_description, "A healthier version")
+        self.assertRedirects(response, "/receipes/")
+
+    def test_update_receipe_invalid_id(self):
+        """Test updating a recipe with an invalid ID."""
+        invalid_url = reverse("update_receipe", args=[99999])
+        response = self.client.post(invalid_url, {
+            "Receipe_Name": "Failsauce",
+            "Receipe_Description": "Should not update"
+        })
+
+        self.assertEqual(response.status_code, 404)  
+
+
+class DeleteReceipeTests(TestCase):
+
+    def setUp(self):
+        self.receipe = Receipe.objects.create(
+            receipe_name="Chocolate Cake",
+            receipe_description="A delicious chocolate cake recipe"
+        )
+        self.url = reverse("delete_receipe", args=[self.receipe.id])
+
+    def test_delete_receipe_success(self):
+        """Test deleting a recipe successfully."""
+        response = self.client.post(self.url) 
+
+        # Ensure the recipe is deleted
+        self.assertFalse(Receipe.objects.filter(id=self.receipe.id).exists())
+
+       
+        self.assertRedirects(response, "/receipes/") 
+    def test_delete_receipe_invalid_id(self):
+        """Test attempting to delete a non-existent recipe."""
+        invalid_url = reverse("delete_receipe", args=[99999]) 
+        response = self.client.post(invalid_url)
+
+        self.assertEqual(response.status_code, 404)  
+        
+        
+        
+class SearchReceipesTests(TestCase):
+
+    def setUp(self):
+      
+        Receipe.objects.create(receipe_name="Chocolate Cake", receipe_description="A delicious dessert")
+        Receipe.objects.create(receipe_name="Pasta", receipe_description="An Italian dish")
+        Receipe.objects.create(receipe_name="Salad", receipe_description="A healthy option")
+        self.url = reverse("receipes")  
+
+    def test_search_query_found(self):
+       
+        response = self.client.get(self.url, {"search": "Pasta"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Pasta")
+        self.assertNotContains(response, "Chocolate Cake")
+        self.assertNotContains(response, "Salad")
+
+    def test_search_query_not_found(self):
+      
+        response = self.client.get(self.url, {"search": "Burger"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Chocolate Cake")
+        self.assertNotContains(response, "Pasta")
+        self.assertNotContains(response, "Salad")
+
+    def test_empty_search_query(self):
+        
+        response = self.client.get(self.url, {"search": ""})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Chocolate Cake")
         self.assertContains(response, "Pasta")
         self.assertContains(response, "Salad")
 
