@@ -20,7 +20,7 @@ from django.contrib import admin
 from django.urls import path
 from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from veges.views import delete_receipe, login_page, logout_page, receipes, update_receipe, register  
+from veges.views import delete_receipe, login_page, logout_page, receipes, update_receipe, register
 
 urlpatterns = [
     path('receipes/', receipes, name="receipes"),
@@ -28,10 +28,9 @@ urlpatterns = [
     path('delete-receipe/<id>/', delete_receipe, name="delete_receipe"),
     path('update-receipe/<id>/', update_receipe, name="update_receipe"),
     path('login/', login_page, name="login"),
-    path('register/', register, name="register"),  # Ensure register view is imported
+    path('register/', register, name="register"), 
     path('logout/',logout_page, name = "logout_page"),
 ]
-
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

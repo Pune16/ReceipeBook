@@ -18,7 +18,7 @@
             </div>
             <div class="mb-3 ">
               <label for="Receipe_Image" id="exampleCheck1">Receipe Image</label>
-              <input name="Receipe_Image" type = "file" class = "form-control">
+              <input name="Receipe_Image" type = "file" class = "form-control" >
             </div>
             <button type="submit" class="btn btn-success">Add Receipe</button>
           </form>
@@ -60,7 +60,7 @@
             <td>{{receipe.receipe_name}}</td>
             <td>{{receipe.receipe_description}}</td>
             <td>
-                <img src = "/media/{{receipe.receipe_image}}" style = "height:100px ">
+                <img src = "/media/{{receipe.receipe_image}}" style = "height:100px " >
             </td>
             <td>
               <a href="/delete-receipe/{{receipe.id}}" class="btn btn-danger m-2 ">Delete</a>
